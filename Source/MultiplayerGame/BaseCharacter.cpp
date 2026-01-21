@@ -6,6 +6,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Weapon/Weapon.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -33,11 +35,29 @@ ABaseCharacter::ABaseCharacter()
 	OverheadWidget->SetupAttachment(RootComponent);
 }
 
+void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	//&：避免拷贝开销，并允许函数修改外部数组（添加属性）。
+	//const：保证函数不会修改对象自身状态，仅修改传入的数组。
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABaseCharacter, OverlappingWeapon);
+}
+
 // Called when the game starts or when spawned
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+}
+
+// Called every frame
+void ABaseCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
 }
 
 // Called to bind functionality to input
@@ -51,6 +71,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis("Turn", this, &ABaseCharacter::Turn);
 	PlayerInputComponent->BindAxis("Lookup", this, &ABaseCharacter::Lookup);
 }
+
 
 
 void ABaseCharacter::MoveForward(float Value)
@@ -83,11 +104,6 @@ void ABaseCharacter::Lookup(float Value)
 	AddControllerPitchInput(Value);
 }
 
-// Called every frame
-void ABaseCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 
-}
 
 
